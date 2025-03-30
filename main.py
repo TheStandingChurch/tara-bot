@@ -4,10 +4,14 @@ import numpy as np
 import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
+from dotenv import load_dotenv
 
-# Replace these with your actual API keys
-API_KEY = "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"
-TELEGRAM_BOT_TOKEN = "7721376204:AAGlf9lydCEEaeS0Z5gGDRB8YgwplgUb9dk"
+# Load environment variables from .env file
+load_dotenv()
+
+# Get the API keys
+API_KEY = os.getenv("API_KEY")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 # Ensure you have your API key set in environment variables or pass it directly
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", API_KEY)
