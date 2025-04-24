@@ -2,7 +2,7 @@ import openai
 import os
 import numpy as np
 import logging
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 from dotenv import load_dotenv
 
@@ -12,6 +12,7 @@ load_dotenv()
 # Get the API keys
 API_KEY = os.getenv("API_KEY")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+CHANNEL_ID = "@pst_tara"  # Replace with your channel's username or ID
 
 # Ensure you have your API key set in environment variables or pass it directly
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", API_KEY)
@@ -328,7 +329,7 @@ MESSAGES_INFO = [
 
     {'title': 'The Prophetic Secrets of Enduring Success', 'cover_image': 'https://www.thestandingchurch.com/storage/2024/06/The-Prophetic-Secrets-of-Enduring-Success-mp3-image.jpg', 'audio_url': 'https://www.thestandingchurch.com/storage/2019/08/The-Prophetic-Secrets-of-Enduring-Success.mp3', 'description': 'God takes pleasure in our success and prosperity. He desires that our success be enduring — independent of prevailing circumstances and the environment.', 'link': 'https://www.thestandingchurch.com/sermons/the-prophetic-secrets-of-enduring-success/'}, 
 
-    {'title': 'Born To Reign', 'cover_image': 'No Image', 'audio_url': 'https://www.thestandingchurch.com/storage/2019/08/Born-to-Reign.mp3', 'description': 'We are destined to reign in every facet of our lives on this earth. It is God’s divine plan for us to continually be above, never to dwell beneath, in any sphere we navigate. However, fulfilling the dominion God has entrusted to us requires an understanding of our identity in Christ.', 'link': 'https://www.thestandingchurch.com/sermons/born-to-reign/'}, 
+    {'title': 'Born To Reign', 'cover_image': 'https://www.thestandingchurch.com/storage/2020/05/TSC-logo-cropped.jpg', 'audio_url': 'https://www.thestandingchurch.com/storage/2019/08/Born-to-Reign.mp3', 'description': 'We are destined to reign in every facet of our lives on this earth. It is God’s divine plan for us to continually be above, never to dwell beneath, in any sphere we navigate. However, fulfilling the dominion God has entrusted to us requires an understanding of our identity in Christ.', 'link': 'https://www.thestandingchurch.com/sermons/born-to-reign/'}, 
 
     {'title': 'The Answers Faith Brings', 'cover_image': 'https://www.thestandingchurch.com/storage/2024/06/The-Answers-Faith-Brings-low-quality-mp3-image.jpg', 'audio_url': 'https://www.thestandingchurch.com/storage/2024/09/The-Answers-Faith-Brings.mp3', 'description': 'At certain times, life presents us with pressing questions that require answers. These answers, which we get from God’s word, unleash the power of God in our affairs and put us in command of life’s situations.', 'link': 'https://www.thestandingchurch.com/sermons/the-answers-faith-brings/'}, 
 
@@ -698,7 +699,7 @@ MESSAGES_INFO = [
 
     {'title': 'Dare to do Big Things', 'cover_image': 'https://www.thestandingchurch.com/storage/sermons/2022/03/Dare-to-DoBig-things.jpg', 'audio_url': 'https://www.thestandingchurch.com/storage/sermons/2022/03/Dare-to-do-Big-Things.mp3', 'description': 'Giant accomplishments in life begin with a decision to fulfil God’s assignment for our lives and dare big projects for the expansion and prosperity of God’s kingdom.', 'link': 'https://www.thestandingchurch.com/sermons/dare-to-do-big-things/'}, 
 
-    {'title': 'Wealth by God’s Wisdom', 'cover_image': 'No Image', 'audio_url': "http://www.thestandingchurch.com/storage/2022/02/Wealth%20by%20God's%20Wisdom.mp3", 'description': 'Wealth is God’s plan for the believer. By redemption, we are appropriately positioned to experience financial victories, abundance and great increase.', 'link': 'https://www.thestandingchurch.com/sermons/wealth-by-gods-wisdom/'}, 
+    {'title': 'Wealth by God’s Wisdom', 'cover_image': 'https://www.thestandingchurch.com/storage/2020/05/TSC-logo-cropped.jpg', 'audio_url': "http://www.thestandingchurch.com/storage/2022/02/Wealth%20by%20God's%20Wisdom.mp3", 'description': 'Wealth is God’s plan for the believer. By redemption, we are appropriately positioned to experience financial victories, abundance and great increase.', 'link': 'https://www.thestandingchurch.com/sermons/wealth-by-gods-wisdom/'}, 
 
     {'title': 'The Wisdom of God', 'cover_image': 'https://www.thestandingchurch.com/storage/2022/01/The-Wisdom-of-God-3-mp3-image.jpg', 'audio_url': 'https://www.thestandingchurch.com/storage/2022/01/The-Wisdom-of-God.mp3', 'description': 'The wisdom of God is God’s way of approaching life and bringing us to an experience of all-round victory. It is what guides us through life’s path, and ensures that we live a life of constant, ceaseless victories.\nIn this series, the Senior Pastor teaches how that God’s wisdom is found in His ways and by choosing to walk in God’s ways, we set ourselves up for a life of extraordinary results.', 'link': 'https://www.thestandingchurch.com/sermons/the-wisdom-of-god/'}, 
 
@@ -807,11 +808,62 @@ def rank_sermons(user_query: str, sermons):
 
 # Telegram command handlers
 async def start(update: Update, context: CallbackContext) -> None:
+    # Send welcome message
     await update.message.reply_text(
         """Hello! I'm Pastor Tara Akinkuade's A.I (v1.0). 
 I am here to assist you in finding messages tailored to your specific needs. 
-Just type your problem (e.g., "I am suffering from lack") or question (e.g, "Why am i going through hard times?"), and I'll find messages for you!"""
+Just type your problem (e.g., "I am suffering from lack") or question (e.g, "Why am I going through hard times?"), and I'll find messages for you!"""
     )
+
+    # Define menu buttons
+    # keyboard = [
+    #     [InlineKeyboardButton("📚 Academics", callback_data="academics")],
+    #     [InlineKeyboardButton("💼 Business", callback_data="business")],
+    #     [InlineKeyboardButton("❤️ Family & Relationships", callback_data="family")],
+    #     [InlineKeyboardButton("🔍 Others", callback_data="others")]
+    # ]
+
+    # reply_markup = InlineKeyboardMarkup(keyboard)
+
+    # # Send menu options after the welcome message
+    # await update.message.reply_text("What :", reply_markup=reply_markup)
+
+# Function to search for sermons in the channel
+async def search_sermon(update: Update, context: CallbackContext) -> None:
+    user_query = update.message.text.lower()
+    messages = await fetch_channel_messages(context)
+
+    # Search for matching messages
+    matching_messages = [
+        msg for msg in messages if user_query in msg.lower()
+    ]
+
+    # Send response based on the search
+    if matching_messages:
+        response = "\n\n".join(matching_messages)
+
+    await update.message.reply_text(response)
+
+# Function to fetch the latest messages from the channel
+async def fetch_channel_messages(context: CallbackContext):
+    chat = await context.bot.get_chat(CHANNEL_ID)
+    messages = []
+    offset_id = 0  # Start from the latest message
+    limit = 100  # Telegram allows a max of 100 messages per request
+
+    while True:
+        batch = await context.bot.get_chat_history(chat.id, offset_id=offset_id, limit=limit)
+
+        if not batch:
+            break  # Stop when no more messages are found
+
+        for message in batch:
+            if message.text:
+                messages.append(message.text)
+
+        offset_id = batch[-1].message_id  # Move offset to the last message in batch
+
+    return messages
 
 async def handle_message(update: Update, context: CallbackContext):
     response = f"Hmm... Please wait a few seconds while i search the database for messages to help you."
