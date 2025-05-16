@@ -14,7 +14,7 @@ from sup_family import SFTC_MESSAGES
 from sup_business import SBTC_MESSAGES
 
 # Load environment variables from .env file
-load_dotenv()
+load_dotenv() 
 
 # Get the API keys
 API_KEY = os.getenv("API_KEY")
