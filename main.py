@@ -98,9 +98,9 @@ async def start(update: Update, context: CallbackContext) -> None:
 
     await update.message.reply_text(
         """Hello! I'm Pastor Tara Akinkuade's A.I (v1.1). 
-    I am here to assist you in finding messages tailored to your specific needs.
+I am here to assist you in finding messages tailored to your specific needs.
 
-    Please choose a category to narrow down your search for messages:
+Please choose a category to narrow down your search for messages:
     """, reply_markup=reply_markup
     )
 
