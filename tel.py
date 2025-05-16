@@ -7,12 +7,12 @@ api_id = "20131774"
 api_hash = 'bc5fc205f1b8082a88f8d6a4b4621105'
 
 # e.g., 'mychannel' or 'https://t.me/mychannel'
-channel_username = 'TheSupernaturalFamily'
+channel_username = 'TheSupernaturalBusinessMan'
 
 phone_number = '+2349041128704'
 
 # File to store the messages
-output_file = 'supernatural_family.txt'
+output_file = 'supernatural_business.txt'
 
 
 # Create the Telegram client
@@ -20,26 +20,26 @@ client = TelegramClient('session_name', api_id, api_hash)
 
 
 def contains_link_or_date(text):
-    return False 
+    # return False 
     text = text.lower()
 
     # Check for links
     link_pattern = r'(https?://|www\.|t\.me|\.com|\.org|\.ly|\.net|\.ng|\.io)'
 
-    # Check for greetings like "happy new year"
-    text = text.lower()
-    array = ['happy new year', 'happy new month', 'testimo', 'udent']
-    if any(keyword in text for keyword in array):
-        return True
+    # # Check for greetings like "happy new year"
+    # text = text.lower()
+    # array = ['happy new year', 'happy new month', 'testimo', 'udent']
+    # if any(keyword in text for keyword in array):
+    #     return True
 
     # Check for month names
-    months = [
-        'january', 'february', 'march', 'april', 'may', 'june',
-        'july', 'august', 'september', 'october', 'november', 'december',
-        'jan', 'feb', 'mar', 'apr', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
-    ]
-    if any(month in text for month in months):
-        return True
+    # months = [
+    #     'january', 'february', 'march', 'april', 'may', 'june',
+    #     'july', 'august', 'september', 'october', 'november', 'december',
+    #     'jan', 'feb', 'mar', 'apr', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
+    # ]
+    # if any(month in text for month in months):
+    #     return True
 
     # Check for date-like patterns
     date_patterns = [
@@ -53,9 +53,9 @@ def contains_link_or_date(text):
     if re.search(link_pattern, text):
         return True
 
-    for pattern in date_patterns:
-        if re.search(pattern, text):
-            return True
+    # for pattern in date_patterns:
+    #     if re.search(pattern, text):
+    #         return True
 
     return False
 

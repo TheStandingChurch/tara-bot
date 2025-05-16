@@ -20,7 +20,7 @@ def restructure_messages(raw_messages):
 
 
 def main():
-    file_path = "supernatural_student.json"
+    file_path = "supernatural_business.json"
 
     # Read the raw JSON list
     with open(file_path, "r", encoding="utf-8") as f:

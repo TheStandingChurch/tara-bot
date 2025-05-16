@@ -29,7 +29,7 @@ def parse_telegram_content(file_path):
     # Process audio entries - this is fixed to use the actual audio number
     for audio_id, audio_number in audio_matches:
         # Use the audio number from "Audio found: X - Y" where X is the number
-        audio_url = f"https://t.me/TheSupernaturalStudent/{audio_id}"
+        audio_url = f"https://t.me/TheSupernaturalBusinessMan/{audio_id}"
         
         if 'audio' not in content_by_id[audio_id]:
             content_by_id[audio_id]['audio'] = [audio_url]
@@ -38,7 +38,7 @@ def parse_telegram_content(file_path):
     
     # Process image entries
     for img_id in image_matches:
-        content_by_id[img_id]['media'] = f"https://t.me/TheSupernaturalStudent/{img_id}"
+        content_by_id[img_id]['media'] = f"https://t.me/TheSupernaturalBusinessMan/{img_id}"
 
     # Build the final result array, sorting by ID in reverse order (bottom first)
     result = []
@@ -53,8 +53,8 @@ def parse_telegram_content(file_path):
 
 def main():
     """Main function to parse the file and output JSON."""
-    file_path = 'supernatural_student.txt'  # Change this to your actual file path
-    output_path = 'supernatural_student.json'
+    file_path = 'supernatural_business.txt'  # Change this to your actual file path
+    output_path = 'supernatural_business.json'
     
     try:
         parsed_entries = parse_telegram_content(file_path)

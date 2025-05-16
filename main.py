@@ -2,14 +2,16 @@ import ast
 import openai
 import os
 import numpy as np
-import asyncio
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, CallbackContext
 from dotenv import load_dotenv
 
-from pst_tara import MESSAGES_INFO
+# from pst_tara import MESSAGES_INFO
+from website_msgs import MESSAGES_INFO
 from sup_student import SSTC_MESSAGES
+from sup_family import SFTC_MESSAGES
+from sup_business import SBTC_MESSAGES
 
 # Load environment variables from .env file
 load_dotenv()
@@ -17,7 +19,6 @@ load_dotenv()
 # Get the API keys
 API_KEY = os.getenv("API_KEY")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-
 
 # Ensure you have your API key set in environment variables or pass it directly
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", API_KEY)
@@ -28,6 +29,7 @@ client = openai.OpenAI(api_key=OPENAI_API_KEY)
 # Logging
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
+
 
 # Function to calculate cosine similarity
 
@@ -57,7 +59,7 @@ def rank_sermons(user_query: str, sermons):
     """ Rank sermons based on relevance to user_query using cosine similarity. """
 
     # Create list of sermon texts
-    sermon_texts = [f"{s['title']} - {s['description']}" for s in sermons]
+    sermon_texts = [f"{s['description']}" for s in sermons]
 
     # Get embeddings for query + all sermons in a single batch call
     embeddings = get_embeddings([user_query] + sermon_texts)
@@ -82,13 +84,14 @@ async def start(update: Update, context: CallbackContext) -> None:
     keyboard = [
         [
             InlineKeyboardButton("🏅 Life of Victory", callback_data='life'),
-            InlineKeyboardButton("💼 Business & Career", callback_data='business'),
+            InlineKeyboardButton("💼 Business & Career",
+                                 callback_data='business'),
         ],
         [
             InlineKeyboardButton("💖 Family & Relationships",
-                                callback_data='family'),
+                                 callback_data='family'),
             InlineKeyboardButton("📘 Learning & Development",
-                                callback_data='learning'),
+                                 callback_data='learning'),
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -129,42 +132,81 @@ async def button(update: Update, context: CallbackContext) -> None:
 async def handle_message(update: Update, context: CallbackContext):
     user_query = update.message.text
     # Default to 'general' if no category set
-    category = context.user_data.get('selected_category', 'general')
+    category = context.user_data.get('selected_category', '')
 
-    await update.message.reply_text("Hmm... Please wait a few seconds while I search for messages to help you.")
+    if category:
+        structured_messages = []
+        await update.message.reply_text("Hmm... Please wait a few seconds while I search for messages to help you.")
 
-    structured_messages = []
-    if category == 'life':
-        structured_messages = MESSAGES_INFO
-    elif category == 'learning':
-        structured_messages = SSTC_MESSAGES
+        if category == 'life':
+            structured_messages = MESSAGES_INFO
+        elif category == 'learning':
+            structured_messages = SSTC_MESSAGES
+        elif category == "family":
+            structured_messages = SFTC_MESSAGES
+        else:
+            structured_messages = SBTC_MESSAGES
 
-    # Convert to searchable format
-    searchable_messages = [
-        {
-            "title": msg["text"],
-            "description": msg["text"],
-            "audio_url": msg["audios"],
-            "media": msg["media"]
-        }
-        for msg in structured_messages
-    ]
+        # Convert to searchable format
+        searchable_messages = [
+            {
+                "description": msg["text"],
+                "audio_url": msg["audios"],
+                "media": msg["media"]
+            }
+            for msg in structured_messages
+        ]
 
-    # Rank messages based on the user query
-    ranked = rank_sermons(user_query, searchable_messages)
+        # Rank messages based on the user query
+        ranked = rank_sermons(user_query, searchable_messages)
 
-    # Send back the top 5 ranked messages
-    for sermon, _ in ranked[:5]:
-        # Send image/media (if any)
-        if sermon["media"]:
-            await update.message.reply_photo(photo=sermon["media"], caption="")
+        # Send back the top 5 ranked messages
+        for sermon, _ in ranked[:5]:
+            if category != 'life': 
+                # Send image/media (if any)
+                if sermon["media"]:
+                    await update.message.reply_photo(photo=sermon["media"], caption="")
 
-        # Send text message
-        await update.message.reply_text(f"📖 {sermon['description']}", parse_mode="Markdown")
+                # Send text message
+                await update.message.reply_text(f"📖 {sermon['description']}", parse_mode="Markdown")
 
-        # Send audio links
-        for audio_url in sermon['audio_url']:
-            await update.message.reply_text(f"🎧 [Listen here]({audio_url})", parse_mode="Markdown")
+                # Send audio links
+                for audio_url in sermon['audio_url']:
+                    await update.message.reply_text(f"🎧 [Listen here]({audio_url})", parse_mode="Markdown")
+            else:
+                cover_image_url = sermon['media']
+                title = sermon['description']
+                link = sermon['audio_url'][0]
+                
+                # Send the cover image first
+                await update.message.reply_photo(
+                    photo=cover_image_url, 
+                    caption=f"📖 {title} \n\n🔗 [Listen to message here]({link})",
+                    parse_mode="Markdown"
+                )
+
+        # Disable category
+        context.user_data['selected_category'] = ""
+    else:
+        keyboard = [
+            [
+                InlineKeyboardButton("🏅 Life of Victory",
+                                     callback_data='life'),
+                InlineKeyboardButton("💼 Business & Career",
+                                     callback_data='business'),
+            ],
+            [
+                InlineKeyboardButton("💖 Family & Relationships",
+                                     callback_data='family'),
+                InlineKeyboardButton("📘 Learning & Development",
+                                     callback_data='learning'),
+            ],
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        await update.message.reply_text(
+            "Please choose a category to narrow down your search for messages:", reply_markup=reply_markup
+        )
 
 
 def main() -> None:
