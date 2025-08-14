@@ -62,7 +62,7 @@ starlette==0.38.2
 sympy==1.13.1
 threadpoolctl==3.5.0
 tiktoken==0.7.0
-torch==2.0.1
+torch>=2.2
 tqdm==4.67.1
 trio==0.22.0
 trio-websocket==0.10.2
