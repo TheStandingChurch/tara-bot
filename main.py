@@ -8,10 +8,10 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 from dotenv import load_dotenv
 
 # from pst_tara import MESSAGES_INFO
-from website_msgs import MESSAGES_INFO
-from sup_student import SSTC_MESSAGES
-from sup_family import SFTC_MESSAGES
-from sup_business import SBTC_MESSAGES
+from utilities.website_msgs import MESSAGES_INFO
+from utilities.sup_student import SSTC_MESSAGES
+from utilities.sup_family import SFTC_MESSAGES
+from utilities.sup_business import SBTC_MESSAGES
 
 # Load environment variables from .env file
 load_dotenv() 

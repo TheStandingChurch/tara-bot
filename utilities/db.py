@@ -1,6 +1,6 @@
 import mysql.connector
 from datetime import datetime
-from config import DB_CONFIG
+from utilities.config import DB_CONFIG
 
 # Sermon Data
 MESSAGES_INFO = [   
