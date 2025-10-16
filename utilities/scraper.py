@@ -34,7 +34,7 @@ session.mount("http://", adapter)
 def scrape_sermons():
     sermons = []
 
-    for page in range(3, 4):
+    for page in range(4, 6):
         url = PAGE_URL.format(page)
         try:
             response = session.get(url, timeout=10)
