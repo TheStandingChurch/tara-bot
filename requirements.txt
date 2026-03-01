@@ -1,8 +1,8 @@
-numpy
+python-telegram-bot==21.11.1
 openai
 python-dotenv
-python-telegram-bot==21.11.1
-
-# scraper only
+psycopg[binary]
+psycopg-pool
+pgvector
 beautifulsoup4
 requests
