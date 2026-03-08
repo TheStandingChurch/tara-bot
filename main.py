@@ -66,7 +66,7 @@ async def handle_message(update: Update, context: CallbackContext):
     ranked = rank_sermons(user_query)
 
     lines = []
-    for i, (sermon, _) in enumerate(ranked[:5], 1):
+    for i, (sermon, _) in enumerate(ranked[:10], 1):
         desc = sermon.get('description', '')
         snippet = desc[:200].rsplit(' ', 1)[0] + '...' if len(desc) > 200 else desc
         line = f"*{i}. {sermon['title']}*\n{snippet}"
