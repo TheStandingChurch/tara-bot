@@ -23,9 +23,7 @@ def load_jsonl(path):
         return [json.loads(line) for line in f if line.strip()]
 
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-
-MESSAGES = load_jsonl(os.path.join(DATA_DIR, "life.jsonl"))
+SERMONS = load_jsonl(os.path.join(os.path.dirname(__file__), "utilities", "sermons.jsonl"))
 
 
 def cosine_similarity(vec1, vec2):
@@ -45,13 +43,13 @@ def get_embeddings(texts: list) -> np.ndarray:
     return np.array(all_embeddings)
 
 
-def rank_messages(user_query: str, messages: list) -> list:
-    texts = [m['text'] for m in messages]
+def rank_sermons(user_query: str, sermons: list) -> list:
+    texts = [f"{s['title']} {s['description']}" for s in sermons]
     embeddings = get_embeddings([user_query] + texts)
     query_embedding = embeddings[0].reshape(1, -1)
     msg_embeddings = embeddings[1:]
     scores = cosine_similarity(query_embedding, msg_embeddings)[0]
-    return sorted(zip(messages, scores), key=lambda x: x[1], reverse=True)
+    return sorted(zip(sermons, scores), key=lambda x: x[1], reverse=True)
 
 
 async def start(update: Update, context: CallbackContext) -> None:
@@ -67,14 +65,13 @@ async def handle_message(update: Update, context: CallbackContext):
 
     await update.message.reply_text("Hmm... Please wait a few seconds while I search for messages to help you.")
 
-    ranked = rank_messages(user_query, MESSAGES)
+    ranked = rank_sermons(user_query, SERMONS)
 
-    for msg, _ in ranked[:5]:
-        await update.message.reply_photo(
-            photo=msg['media'],
-            caption=f"📖 {msg['text']}\n\n🔗 [Listen to message here]({msg['audios'][0]})",
-            parse_mode="Markdown"
-        )
+    for sermon, _ in ranked[:5]:
+        text = f"📖 *{sermon['title']}*\n\n{sermon['description'][:300]}{'...' if len(sermon['description']) > 300 else ''}"
+        if sermon.get('audio_url'):
+            text += f"\n\n🎧 [Listen here]({sermon['audio_url']})"
+        await update.message.reply_text(text, parse_mode="Markdown")
 
 
 def main():
