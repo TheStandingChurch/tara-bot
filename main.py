@@ -52,7 +52,7 @@ def rank_sermons(user_query: str) -> list:
 
 async def start(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text(
-        "Hello! I'm Pastor Tara Akinkuade's A.I (v1.1). \n"
+        "Hello! I'm Pastor Tara Akinkuade's A.I (v1.2). \n"
         "I am here to assist you in finding messages tailored to your specific needs.\n\n"
         "Type what you're dealing with or how you feel — I'll help you find the right message."
     )
