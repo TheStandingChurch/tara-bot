@@ -24,6 +24,7 @@ def load_jsonl(path):
 
 
 SERMONS = load_jsonl(os.path.join(os.path.dirname(__file__), "utilities", "sermons.jsonl"))
+SERMON_EMBEDDINGS = None  # pre-computed at startup
 
 
 def cosine_similarity(vec1, vec2):
@@ -43,13 +44,10 @@ def get_embeddings(texts: list) -> np.ndarray:
     return np.array(all_embeddings)
 
 
-def rank_sermons(user_query: str, sermons: list) -> list:
-    texts = [f"{s['title']} {s['description']}" for s in sermons]
-    embeddings = get_embeddings([user_query] + texts)
-    query_embedding = embeddings[0].reshape(1, -1)
-    msg_embeddings = embeddings[1:]
-    scores = cosine_similarity(query_embedding, msg_embeddings)[0]
-    return sorted(zip(sermons, scores), key=lambda x: x[1], reverse=True)
+def rank_sermons(user_query: str) -> list:
+    query_embedding = get_embeddings([user_query])  # 1 API call
+    scores = cosine_similarity(query_embedding, SERMON_EMBEDDINGS)[0]
+    return sorted(zip(SERMONS, scores), key=lambda x: x[1], reverse=True)
 
 
 async def start(update: Update, context: CallbackContext) -> None:
@@ -65,16 +63,25 @@ async def handle_message(update: Update, context: CallbackContext):
 
     await update.message.reply_text("Hmm... Please wait a few seconds while I search for messages to help you.")
 
-    ranked = rank_sermons(user_query, SERMONS)
+    ranked = rank_sermons(user_query)
 
-    for sermon, _ in ranked[:5]:
-        text = f"📖 *{sermon['title']}*\n\n{sermon['description'][:300]}{'...' if len(sermon['description']) > 300 else ''}"
+    lines = []
+    for i, (sermon, _) in enumerate(ranked[:5], 1):
+        line = f"*{i}. {sermon['title']}*"
         if sermon.get('audio_url'):
-            text += f"\n\n🎧 [Listen here]({sermon['audio_url']})"
-        await update.message.reply_text(text, parse_mode="Markdown")
+            line += f"\n🎧 [Listen here]({sermon['audio_url']})"
+        lines.append(line)
+
+    await update.message.reply_text("\n\n".join(lines), parse_mode="Markdown")
 
 
 def main():
+    global SERMON_EMBEDDINGS
+    logging.info("Pre-computing sermon embeddings...")
+    texts = [f"{s['title']} {s['description']}" for s in SERMONS]
+    SERMON_EMBEDDINGS = get_embeddings(texts)
+    logging.info(f"Ready — {len(SERMONS)} sermons indexed.")
+
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
