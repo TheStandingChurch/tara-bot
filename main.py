@@ -67,7 +67,9 @@ async def handle_message(update: Update, context: CallbackContext):
 
     lines = []
     for i, (sermon, _) in enumerate(ranked[:5], 1):
-        line = f"*{i}. {sermon['title']}*"
+        desc = sermon.get('description', '')
+        snippet = desc[:200].rsplit(' ', 1)[0] + '...' if len(desc) > 200 else desc
+        line = f"*{i}. {sermon['title']}*\n{snippet}"
         if sermon.get('audio_url'):
             line += f"\n🎧 [Listen here]({sermon['audio_url']})"
         lines.append(line)
