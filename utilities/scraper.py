@@ -2,6 +2,7 @@ import os
 import re
 import base64
 import random
+from urllib.parse import quote
 import requests
 from bs4 import BeautifulSoup
 import json
@@ -69,6 +70,12 @@ def get_sermon_links(page):
     return [a["href"] for a in soup.select("h3.wpfc-sermon-title a") if a.get("href")]
 
 
+def make_download_url(raw_mp3_url):
+    """Wrap a raw mp3 URL in the site's download.php handler (requires 'loc' prefix)."""
+    encoded = quote("loc" + raw_mp3_url, safe="")
+    return f"https://www.thestandingchurch.com/core/modules/mp3-jplayer/download.php?mp3={encoded}&pID=0"
+
+
 def decode_audio(encoded):
     """Decode base64-encoded mp3 URL used by MP3jPlayer."""
     try:
@@ -99,17 +106,17 @@ def scrape_sermon(url):
     else:
         description = ""
 
-    # Audio: try MP3jPlayer base64 JS variable first, then plain download link
+    # Audio: decode base64 mp3 URL and build the download.php link
     audio_url = ""
     match = re.search(r'mp3\s*:\s*["\']([A-Za-z0-9+/=]{20,})["\']', html)
     if match:
         decoded = decode_audio(match.group(1))
         if decoded and decoded.startswith("http"):
-            audio_url = decoded
+            audio_url = make_download_url(decoded)
     if not audio_url:
         dl = soup.find("a", href=re.compile(r'\.mp3$', re.I))
         if dl:
-            audio_url = dl["href"]
+            audio_url = make_download_url(dl["href"])
 
     # Preacher
     preacher_el = soup.select_one("a[href*='preacher']")
