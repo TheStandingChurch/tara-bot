@@ -24,7 +24,7 @@ def load_jsonl(path):
 
 
 SERMONS = load_jsonl(os.path.join(os.path.dirname(__file__), "utilities", "sermons.jsonl"))
-SERMON_EMBEDDINGS = None  # pre-computed at startup
+SERMON_EMBEDDINGS = None
 
 
 def cosine_similarity(vec1, vec2):
@@ -36,16 +36,13 @@ def get_embeddings(texts: list) -> np.ndarray:
     all_embeddings = []
     for i in range(0, len(texts), batch_size):
         batch = texts[i:i + batch_size]
-        response = client.embeddings.create(
-            input=batch,
-            model="text-embedding-3-small"
-        )
+        response = client.embeddings.create(input=batch, model="text-embedding-3-small")
         all_embeddings.extend([item.embedding for item in response.data])
     return np.array(all_embeddings)
 
 
 def rank_sermons(user_query: str) -> list:
-    query_embedding = get_embeddings([user_query])  # 1 API call
+    query_embedding = get_embeddings([user_query])
     scores = cosine_similarity(query_embedding, SERMON_EMBEDDINGS)[0]
     return sorted(zip(SERMONS, scores), key=lambda x: x[1], reverse=True)
 
@@ -60,22 +57,20 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 async def handle_message(update: Update, context: CallbackContext):
     user_query = update.message.text
-
-    await update.message.reply_text("Hmm... Please wait a few seconds while I search for messages to help you.")
+    await update.message.reply_text("Searching for messages to help you...")
 
     ranked = rank_sermons(user_query)
 
     lines = []
     for i, (sermon, _) in enumerate(ranked[:10], 1):
-        desc = sermon.get('description', '')
-        # Skip trivial descriptions (just the title repeated or very short)
-        if len(desc) > len(sermon['title']) + 5:
-            snippet = desc[:200].rsplit(' ', 1)[0] + '...' if len(desc) > 200 else desc
+        desc = sermon.get("description", "")
+        if len(desc) > len(sermon["title"]) + 5:
+            snippet = desc[:200].rsplit(" ", 1)[0] + "..." if len(desc) > 200 else desc
             line = f"*{i}. {sermon['title']}*\n{snippet}"
         else:
             line = f"*{i}. {sermon['title']}*"
-        if sermon.get('url'):
-            line += f"\n🎧 [Listen here]({sermon['url']})"
+        if sermon.get("audio_url"):
+            line += f"\n🎧 [Listen here]({sermon['audio_url']})"
         lines.append(line)
 
     await update.message.reply_text("\n\n".join(lines), parse_mode="Markdown")
@@ -84,8 +79,7 @@ async def handle_message(update: Update, context: CallbackContext):
 def main():
     global SERMON_EMBEDDINGS
     logging.info("Pre-computing sermon embeddings...")
-    texts = [f"{s['title']} {s['description']}" for s in SERMONS]
-    SERMON_EMBEDDINGS = get_embeddings(texts)
+    SERMON_EMBEDDINGS = get_embeddings([f"{s['title']} {s['description']}" for s in SERMONS])
     logging.info(f"Ready — {len(SERMONS)} sermons indexed.")
 
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
