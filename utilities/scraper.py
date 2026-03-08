@@ -99,13 +99,17 @@ def scrape_sermon(url):
     else:
         description = ""
 
-    # Audio: MP3jPlayer encodes the URL as base64 in a JS variable
+    # Audio: try MP3jPlayer base64 JS variable first, then plain download link
     audio_url = ""
     match = re.search(r'mp3\s*:\s*["\']([A-Za-z0-9+/=]{20,})["\']', html)
     if match:
         decoded = decode_audio(match.group(1))
         if decoded and decoded.startswith("http"):
             audio_url = decoded
+    if not audio_url:
+        dl = soup.find("a", href=re.compile(r'\.mp3$', re.I))
+        if dl:
+            audio_url = dl["href"]
 
     # Preacher
     preacher_el = soup.select_one("a[href*='preacher']")

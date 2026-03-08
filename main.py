@@ -68,10 +68,14 @@ async def handle_message(update: Update, context: CallbackContext):
     lines = []
     for i, (sermon, _) in enumerate(ranked[:10], 1):
         desc = sermon.get('description', '')
-        snippet = desc[:200].rsplit(' ', 1)[0] + '...' if len(desc) > 200 else desc
-        line = f"*{i}. {sermon['title']}*\n{snippet}"
-        if sermon.get('audio_url'):
-            line += f"\n🎧 [Listen here]({sermon['audio_url']})"
+        # Skip trivial descriptions (just the title repeated or very short)
+        if len(desc) > len(sermon['title']) + 5:
+            snippet = desc[:200].rsplit(' ', 1)[0] + '...' if len(desc) > 200 else desc
+            line = f"*{i}. {sermon['title']}*\n{snippet}"
+        else:
+            line = f"*{i}. {sermon['title']}*"
+        if sermon.get('url'):
+            line += f"\n🎧 [Listen here]({sermon['url']})"
         lines.append(line)
 
     await update.message.reply_text("\n\n".join(lines), parse_mode="Markdown")
