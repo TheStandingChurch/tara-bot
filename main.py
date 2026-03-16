@@ -23,7 +23,8 @@ def load_jsonl(path):
         return [json.loads(line) for line in f if line.strip()]
 
 
-MESSAGES = load_jsonl(os.path.join(os.path.dirname(__file__), "utilities", "channel_messages.jsonl"))
+BASE_DIR = os.path.dirname(__file__)
+MESSAGES = load_jsonl(os.path.join(BASE_DIR, "utilities", "channel_messages.jsonl"))
 MESSAGE_EMBEDDINGS = None
 
 
@@ -47,18 +48,26 @@ def rank_messages(user_query: str) -> list:
     return sorted(zip(MESSAGES, scores), key=lambda x: x[1], reverse=True)
 
 
+WELCOME = (
+    "Hello! I'm Pastor Tara Akinkuade's A.I (v1.3).\n"
+    "I am here to assist you in finding messages tailored to your specific needs.\n\n"
+    "Type what you're dealing with or how you feel — I'll help you find the right message."
+)
+
+
 async def start(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text(
-        "Hello! I'm Pastor Tara Akinkuade's A.I (v1.2). \n"
-        "I am here to assist you in finding messages tailored to your specific needs.\n\n"
-        "Type what you're dealing with or how you feel — I'll help you find the right message."
-    )
+    await update.message.reply_text(WELCOME)
 
 
 async def handle_message(update: Update, context: CallbackContext):
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
     user_query = update.message.text
+
+    if context.user_data.get("greeted") is None:
+        context.user_data["greeted"] = True
+        await update.message.reply_text(WELCOME)
+
     await update.message.reply_text("Searching for messages to help you...")
 
     ranked = rank_messages(user_query)
@@ -71,6 +80,8 @@ async def handle_message(update: Update, context: CallbackContext):
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🎧 Listen on channel", url=link)]]) if link else None
 
         photo_path = msg.get("photo_path", "")
+        if photo_path:
+            photo_path = os.path.join(BASE_DIR, photo_path)
 
         if photo_path and os.path.exists(photo_path):
             with open(photo_path, "rb") as photo_file:
