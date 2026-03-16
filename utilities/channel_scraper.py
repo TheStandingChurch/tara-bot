@@ -42,7 +42,6 @@ BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 PHONE = os.environ.get("TELEGRAM_PHONE") or None
 CHANNEL = "pst_tara"
 OUT_PATH = os.path.join(os.path.dirname(__file__), "channel_messages.jsonl")
-PHOTOS_DIR = os.path.join(os.path.dirname(__file__), "cover_photos")
 
 
 def is_audio(message) -> bool:
@@ -75,8 +74,6 @@ def has_photo(message):
 
 
 async def scrape():
-    os.makedirs(PHOTOS_DIR, exist_ok=True)
-
     client = TelegramClient("tara_scraper_session", API_ID, API_HASH)
     await client.start(phone=PHONE)  # prompts for phone + code on first run; session saved after
     print(f"Connected. Fetching messages from @{CHANNEL} ...")
@@ -146,25 +143,18 @@ async def scrape():
                 print(f"  ⚠️  id={msg.id} — audio with no text, skipping")
                 continue
 
-            # Download cover photo locally
-            photo_path = ""
-            if photo_msg is not None:
-                dest = os.path.join(PHOTOS_DIR, f"{msg.id}.jpg")
-                if not os.path.exists(dest):
-                    await client.download_media(photo_msg, file=dest)
-                photo_path = dest
+            photo_message_id = photo_msg.id if photo_msg is not None else None
 
             post = {
                 "message_id": msg.id,
                 "text": text.strip(),
                 "date": msg.date.strftime("%Y-%m-%d"),
                 "channel_link": f"https://t.me/{CHANNEL}/{msg.id}",
-                "photo_path": photo_path,
-                "audio_file_id": audio_file_id,
+                "photo_message_id": photo_message_id,
                 "audio_filename": audio_filename,
             }
             posts.append(post)
-            print(f"  ✅  id={msg.id}  {audio_filename or 'audio'}  photo={'yes' if photo_path else 'no'}  |  {text[:60]!r}")
+            print(f"  ✅  id={msg.id}  {audio_filename or 'audio'}  photo={'yes' if photo_message_id else 'no'}  |  {text[:60]!r}")
 
         posts.sort(key=lambda p: p["message_id"])
         with open(OUT_PATH, "w", encoding="utf-8") as f:

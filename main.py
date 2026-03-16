@@ -79,18 +79,17 @@ async def handle_message(update: Update, context: CallbackContext):
         caption = f"*{i}.* {snippet}"
         keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🎧 Listen on channel", url=link)]]) if link else None
 
-        photo_path = msg.get("photo_path", "")
-        if photo_path:
-            photo_path = os.path.join(BASE_DIR, photo_path)
+        photo_message_id = msg.get("photo_message_id")
 
-        if photo_path and os.path.exists(photo_path):
-            with open(photo_path, "rb") as photo_file:
-                await update.message.reply_photo(
-                    photo=photo_file,
-                    caption=caption,
-                    parse_mode="Markdown",
-                    reply_markup=keyboard,
-                )
+        if photo_message_id:
+            await context.bot.copy_message(
+                chat_id=update.effective_chat.id,
+                from_chat_id="@pst_tara",
+                message_id=photo_message_id,
+                caption=caption,
+                parse_mode="Markdown",
+                reply_markup=keyboard,
+            )
         else:
             await update.message.reply_text(
                 caption,
