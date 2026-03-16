@@ -23,8 +23,8 @@ def load_jsonl(path):
         return [json.loads(line) for line in f if line.strip()]
 
 
-SERMONS = load_jsonl(os.path.join(os.path.dirname(__file__), "utilities", "sermons.jsonl"))
-SERMON_EMBEDDINGS = None
+MESSAGES = load_jsonl(os.path.join(os.path.dirname(__file__), "utilities", "channel_messages.jsonl"))
+MESSAGE_EMBEDDINGS = None
 
 
 def cosine_similarity(vec1, vec2):
@@ -41,10 +41,10 @@ def get_embeddings(texts: list) -> np.ndarray:
     return np.array(all_embeddings)
 
 
-def rank_sermons(user_query: str) -> list:
+def rank_messages(user_query: str) -> list:
     query_embedding = get_embeddings([user_query])
-    scores = cosine_similarity(query_embedding, SERMON_EMBEDDINGS)[0]
-    return sorted(zip(SERMONS, scores), key=lambda x: x[1], reverse=True)
+    scores = cosine_similarity(query_embedding, MESSAGE_EMBEDDINGS)[0]
+    return sorted(zip(MESSAGES, scores), key=lambda x: x[1], reverse=True)
 
 
 async def start(update: Update, context: CallbackContext) -> None:
@@ -56,31 +56,44 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 
 async def handle_message(update: Update, context: CallbackContext):
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
     user_query = update.message.text
     await update.message.reply_text("Searching for messages to help you...")
 
-    ranked = rank_sermons(user_query)
+    ranked = rank_messages(user_query)
 
-    lines = []
-    for i, (sermon, _) in enumerate(ranked[:10], 1):
-        desc = sermon.get("description", "")
-        if len(desc) > len(sermon["title"]) + 5:
-            snippet = desc[:200].rsplit(" ", 1)[0] + "..." if len(desc) > 200 else desc
-            line = f"*{i}. {sermon['title']}*\n{snippet}"
+    for i, (msg, _) in enumerate(ranked[:5], 1):
+        text = msg.get("text", "")
+        snippet = text[:300].rsplit(" ", 1)[0] + "..." if len(text) > 300 else text
+        link = msg.get("channel_link", "")
+        caption = f"*{i}.* {snippet}"
+        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🎧 Listen on channel", url=link)]]) if link else None
+
+        photo_path = msg.get("photo_path", "")
+
+        if photo_path and os.path.exists(photo_path):
+            with open(photo_path, "rb") as photo_file:
+                await update.message.reply_photo(
+                    photo=photo_file,
+                    caption=caption,
+                    parse_mode="Markdown",
+                    reply_markup=keyboard,
+                )
         else:
-            line = f"*{i}. {sermon['title']}*"
-        if sermon.get("audio_url"):
-            line += f"\n🎧 [Listen here]({sermon['audio_url']})"
-        lines.append(line)
-
-    await update.message.reply_text("\n\n".join(lines), parse_mode="Markdown")
+            await update.message.reply_text(
+                caption,
+                parse_mode="Markdown",
+                reply_markup=keyboard,
+                disable_web_page_preview=True,
+            )
 
 
 def main():
-    global SERMON_EMBEDDINGS
-    logging.info("Pre-computing sermon embeddings...")
-    SERMON_EMBEDDINGS = get_embeddings([f"{s['title']} {s['description']}" for s in SERMONS])
-    logging.info(f"Ready — {len(SERMONS)} sermons indexed.")
+    global MESSAGE_EMBEDDINGS
+    logging.info("Pre-computing channel message embeddings...")
+    MESSAGE_EMBEDDINGS = get_embeddings([m["text"] for m in MESSAGES])
+    logging.info(f"Ready — {len(MESSAGES)} messages indexed.")
 
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     application.add_handler(CommandHandler("start", start))
