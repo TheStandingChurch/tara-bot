@@ -81,31 +81,34 @@ async def handle_message(update: Update, context: CallbackContext):
         text = msg.get("text", "")
         snippet = text[:300].rsplit(" ", 1)[0] + "..." if len(text) > 300 else text
         link = msg.get("channel_link", "")
-        caption = f"*{i}.* {snippet}"
-        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🎧 Listen on channel", url=link)]]) if link else None
-
+        audio_message_id = msg.get("message_id")
         photo_message_id = msg.get("photo_message_id")
+        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("📢 Open in channel", url=link)]]) if link else None
 
+        # Send cover art with text snippet
         try:
             if photo_message_id:
                 await context.bot.copy_message(
                     chat_id=update.effective_chat.id,
                     from_chat_id="@pst_tara",
                     message_id=photo_message_id,
-                    caption=caption,
+                    caption=f"*{i}.* {snippet}",
                     parse_mode="Markdown",
-                    reply_markup=keyboard,
                 )
-            else:
-                await update.message.reply_text(
-                    caption,
-                    parse_mode="Markdown",
-                    reply_markup=keyboard,
-                    disable_web_page_preview=True,
-                )
+        except Exception:
+            logging.exception(f"Failed to send cover art for result {i}")
+
+        # Send the audio file so the user can play it directly
+        try:
+            await context.bot.copy_message(
+                chat_id=update.effective_chat.id,
+                from_chat_id="@pst_tara",
+                message_id=audio_message_id,
+                reply_markup=keyboard,
+            )
         except Exception as e:
-            logging.exception(f"Failed to send result {i}")
-            await update.message.reply_text(caption, parse_mode="Markdown", reply_markup=keyboard, disable_web_page_preview=True)
+            logging.exception(f"Failed to send audio for result {i}")
+            await update.message.reply_text(f"*{i}.* {snippet}", parse_mode="Markdown", reply_markup=keyboard, disable_web_page_preview=True)
 
 
 def main():
