@@ -70,7 +70,12 @@ async def handle_message(update: Update, context: CallbackContext):
 
     await update.message.reply_text("Searching for messages to help you...")
 
-    ranked = rank_messages(user_query)
+    try:
+        ranked = rank_messages(user_query)
+    except Exception as e:
+        logging.exception("rank_messages failed")
+        await update.message.reply_text(f"Sorry, something went wrong: {e}")
+        return
 
     for i, (msg, _) in enumerate(ranked[:5], 1):
         text = msg.get("text", "")
@@ -81,22 +86,26 @@ async def handle_message(update: Update, context: CallbackContext):
 
         photo_message_id = msg.get("photo_message_id")
 
-        if photo_message_id:
-            await context.bot.copy_message(
-                chat_id=update.effective_chat.id,
-                from_chat_id="@pst_tara",
-                message_id=photo_message_id,
-                caption=caption,
-                parse_mode="Markdown",
-                reply_markup=keyboard,
-            )
-        else:
-            await update.message.reply_text(
-                caption,
-                parse_mode="Markdown",
-                reply_markup=keyboard,
-                disable_web_page_preview=True,
-            )
+        try:
+            if photo_message_id:
+                await context.bot.copy_message(
+                    chat_id=update.effective_chat.id,
+                    from_chat_id="@pst_tara",
+                    message_id=photo_message_id,
+                    caption=caption,
+                    parse_mode="Markdown",
+                    reply_markup=keyboard,
+                )
+            else:
+                await update.message.reply_text(
+                    caption,
+                    parse_mode="Markdown",
+                    reply_markup=keyboard,
+                    disable_web_page_preview=True,
+                )
+        except Exception as e:
+            logging.exception(f"Failed to send result {i}")
+            await update.message.reply_text(caption, parse_mode="Markdown", reply_markup=keyboard, disable_web_page_preview=True)
 
 
 def main():
