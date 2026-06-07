@@ -49,13 +49,14 @@ def rank_messages(user_query: str) -> list:
 
 
 WELCOME = (
-    "Hello! I'm Pastor Tara Akinkuade's A.I (v1.3).\n"
-    "I am here to assist you in finding messages tailored to your specific needs.\n\n"
-    "Type what you're dealing with or how you feel — I'll help you find the right message."
+    "Hi, I'm Pastor Tara Akinkuade's A.I. "
+    "I am here to assist you to find messages tailored to your specific situations and goals. "
+    "Please tell me what you want or are going through"
 )
 
 
 async def start(update: Update, context: CallbackContext) -> None:
+    context.user_data["greeted"] = True
     await update.message.reply_text(WELCOME)
 
 
@@ -64,9 +65,10 @@ async def handle_message(update: Update, context: CallbackContext):
 
     user_query = update.message.text
 
-    if context.user_data.get("greeted") is None:
+    if not context.user_data.get("greeted"):
         context.user_data["greeted"] = True
         await update.message.reply_text(WELCOME)
+        return
 
     await update.message.reply_text("Searching for messages to help you...")
 
