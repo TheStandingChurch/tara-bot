@@ -49,9 +49,9 @@ def rank_messages(user_query: str) -> list:
 
 
 WELCOME = (
-    "Hello! I'm Pastor Tara Akinkuade's A.I (v1.4).\n"
-    "I am here to assist you in finding messages tailored to your specific needs.\n\n"
-    "Type what you're dealing with or how you feel — I'll help you find the right message."
+    "Hello! I am Pastor Tara's AI Bot. I am here to assist you in finding messages tailored to your specific needs.\n\n"
+    "Simply share a topic you would like to learn about or an area where you are seeking guidance from God's Word, "
+    "and I will recommend messages that may be helpful."
 )
 
 
